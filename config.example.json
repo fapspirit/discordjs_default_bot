@@ -1,0 +1,15 @@
+{
+  "token": "YOUR_TOKEN_HERE",
+  "prefix": "!",
+  "soundDir": "./sounds/",
+  "defaultVolume": "20",
+  "enabled_greeting": false,
+  "greeting_song": "YOUR_GREETING_SONG_HERE",
+  "delete_delay": 1000,
+  "aliases": [
+    {
+      "prefix": "!!",
+      "command": "play"
+    }
+  ]
+}
