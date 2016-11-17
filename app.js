@@ -48,6 +48,19 @@ let getSounds = () => {
     .map(sound => path.basename(sound, path.extname(sound)))
 }
 
+let parseText = (text) => {
+  let data = {
+    command: getCommand(text),
+    args: getArgs(text)
+  }
+  ALIASES.forEach(item => {
+    if (text.startsWith(item.prefix)) {
+      data.command = item.command
+    }
+  })
+  return data
+}
+
 /////
 // Main
 /////
@@ -189,6 +202,7 @@ const commandsDispatcher = {
 
 client.on('ready', () => console.log('Ready'))
 
+
 client.on('voiceStateUpdate', (oldMember, newMember) => {
   if (!ENABLED_GREETING) return printLog('logged', ['not played'], newMember.user.username)
   if (newMember.user.bot) return
@@ -201,6 +215,7 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
   printLog('logged', ['played'], newMember.user.username)
 })
 
+
 client.on('message', message => {
   // Prevent self-spaming (just in case)
   if (message.author.bot) return
@@ -208,11 +223,8 @@ client.on('message', message => {
   // Ignore messages that doesn't related to bot
   if (!message.content.startsWith(PREFIX)) return
 
-  // Get command
-  const command = getCommand(message.content)
-
-  // Get args
-  let args = getArgs(message.content)
+  // Get command and args
+  let { command, args } = parseText(message.content)
 
   commandDispatcher(command, args, message)
 
