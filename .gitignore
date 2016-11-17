@@ -1,4 +1,4 @@
 ./node_modules/
 ./sounds/
 
-config.json
+./config.json
