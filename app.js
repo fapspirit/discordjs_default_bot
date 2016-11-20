@@ -2,6 +2,7 @@ const discord = require('discord.js')
 const client = new discord.Client()
 const fs = require('fs')
 const path = require('path')
+const request = require('request')
 
 const config = require('./config.json')
 const PREFIX = config.prefix
@@ -160,6 +161,7 @@ let help = (args, message) => {
     !list                    List avaliable sounds\n
     !stop                    Pause playing current song\n
     !resume                  Resume playing previus song\n
+    !addFile                 Add files (Only accepts .mp3)\n
     !volume [1..100]         Set volume form 1 to 100 (Default 20)\n
     !TTS [text]              Talks passed text (Switched OFF by default)\n
     !TTSOn                   Switch TTS on\n
@@ -167,6 +169,14 @@ let help = (args, message) => {
     !greetingOn              Switch on greeting on connection (Switched ON by default)\n
     !greetingOff             Switch off greeting on connection\n
     !greeting [sound_name]   Set [sound_name] as greeting on someone connect\n
+    \n
+    Aliases:\n\n
+    !! [song_name]           Play [sound_name]. Space is required.\n
+    \n\n
+    To add song to songlist, follow this steps:\n
+    \t1. Drag'n'Drop songs in the channel with bot.\n
+    \t2. In the comment message write !addFile command.\n
+    \t3. You will see success message, if everything is OK\n
     \`\`\`
   `
   message.author.sendMessage(text)
@@ -180,12 +190,31 @@ let random = (args, message) => {
   playSound(voiceChannel, sounds[randomIndex])
 }
 
+let addFile = (args, message) => {
+  message.attachments.every(attachment => {
+    if (path.extname(attachment.filename) !== '.mp3') {
+      return message.author.sendMessage(`${attachment.filename} have not valid extenshion!`)
+    }
+    if (getSounds().includes(path.basename(attachment.filename, path.extname(attachment.filename)))) {
+      return message.author.sendMessage(`${attachment.filename} already exists!`)
+    }
+    let dest = `${SOUNDS_DIR}${attachment.filename}`
+    let file = fs.createWriteStream(dest)
+    request.head(attachment.url, (err, res, body) => {
+       request(attachment.url).pipe(file).on('close', () => {
+        message.author.sendMessage(`${attachment.filename} successfully downladed! You may now use it with \`!play\` or \`!!\``)
+       })
+    })
+  })
+}
+
 const commandsDispatcher = {
   play,
   stop,
   resume,
   random,
   volume,
+  addFile,
   TTS,
   TTSOn,
   TTSOff,
