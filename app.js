@@ -193,15 +193,18 @@ let random = (args, message) => {
 let addFile = (args, message) => {
   message.attachments.every(attachment => {
     if (path.extname(attachment.filename) !== '.mp3') {
+      console.log(`Attempting to add file with no valid extinshion: ${attachment.filename}`)
       return message.author.sendMessage(`${attachment.filename} have not valid extenshion!`)
     }
     if (getSounds().includes(path.basename(attachment.filename, path.extname(attachment.filename)))) {
+      console.log(`Attempting to add file with existing name: ${attachment.filename}`)
       return message.author.sendMessage(`${attachment.filename} already exists!`)
     }
     let dest = `${SOUNDS_DIR}${attachment.filename}`
     let file = fs.createWriteStream(dest)
     request.head(attachment.url, (err, res, body) => {
        request(attachment.url).pipe(file).on('close', () => {
+        console.log(`${attachment.filename} successfully added`)
         message.author.sendMessage(`${attachment.filename} successfully downladed! You may now use it with \`!play\` or \`!!\``)
        })
     })
