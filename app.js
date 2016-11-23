@@ -184,6 +184,7 @@ let help = (args, message) => {
     !stop                    Pause playing current song\n
     !resume                  Resume playing previus song\n
     !addFile                 Add files (Only accepts .mp3)\n
+    !yt [link]               Play an YouTube video from [link]\n
     !volume [1..100]         Set volume form 1 to 100 (Default 20)\n
     !TTS [text]              Talks passed text (Switched OFF by default)\n
     !TTSOn                   Switch TTS on\n
