@@ -3,6 +3,7 @@ const client = new discord.Client()
 const fs = require('fs')
 const path = require('path')
 const request = require('request')
+const ytdl = require('ytdl-core')
 
 const config = require('./config.json')
 const PREFIX = config.prefix
@@ -102,6 +103,27 @@ let play = (args, message) => {
   playSound(voiceChannel, sound)
 }
 
+
+let yt = (args, message) => {
+  let url = args[0]
+  if (!url) return
+
+  let voiceChannel = message.member.voiceChannel
+  if (!voiceChannel) return
+
+  voiceChannel.join()
+    .then(connection => {
+      if (connection.player.dispatcher && !connection.player.dispatcher.paused) {
+        connection.player.dispatcher.pause()
+      }
+      const stream = ytdl(url, {filter: 'audioonly'})
+      const dispatcher = connection.playStream(stream, VOLUME)
+      dispatcher.on('end', () => dispatcher.pause())
+      message.channel.sendMessage()
+    })
+    .catch(console.error)
+}
+
 let TTS = (args, message) => {
   if (TTS_ON === true) {
     message.channel.sendTTSMessage(args.join(' '))
@@ -162,6 +184,7 @@ let help = (args, message) => {
     !stop                    Pause playing current song\n
     !resume                  Resume playing previus song\n
     !addFile                 Add files (Only accepts .mp3)\n
+    !yt [link]               Play an YouTube video from [link]\n
     !volume [1..100]         Set volume form 1 to 100 (Default 20)\n
     !TTS [text]              Talks passed text (Switched OFF by default)\n
     !TTSOn                   Switch TTS on\n
@@ -193,20 +216,24 @@ let random = (args, message) => {
 let addFile = (args, message) => {
   message.attachments.every(attachment => {
     if (path.extname(attachment.filename) !== '.mp3') {
+      console.log(`Attempting to add file with no valid extinshion: ${attachment.filename}`)
       return message.author.sendMessage(`${attachment.filename} have not valid extenshion!`)
     }
     if (getSounds().includes(path.basename(attachment.filename, path.extname(attachment.filename)))) {
+      console.log(`Attempting to add file with existing name: ${attachment.filename}`)
       return message.author.sendMessage(`${attachment.filename} already exists!`)
     }
     let dest = `${SOUNDS_DIR}${attachment.filename}`
     let file = fs.createWriteStream(dest)
     request.head(attachment.url, (err, res, body) => {
        request(attachment.url).pipe(file).on('close', () => {
+        console.log(`${attachment.filename} successfully added`)
         message.author.sendMessage(`${attachment.filename} successfully downladed! You may now use it with \`!play\` or \`!!\``)
        })
     })
   })
 }
+
 
 const commandsDispatcher = {
   play,
@@ -215,6 +242,7 @@ const commandsDispatcher = {
   random,
   volume,
   addFile,
+  yt,
   TTS,
   TTSOn,
   TTSOff,
