@@ -2,3 +2,4 @@ node_modules
 sounds
 gitflow
 config.json
+nodemon.json

@@ -3,6 +3,7 @@ const client = new discord.Client()
 const fs = require('fs')
 const path = require('path')
 const request = require('request')
+const ytdl = require('ytdl-core')
 
 const config = require('./config.json')
 const PREFIX = config.prefix
@@ -100,6 +101,27 @@ let play = (args, message) => {
   // Check if sound exists on fs
   if (!fs.readdirSync(SOUNDS_DIR).includes(`${sound}.mp3`)) return
   playSound(voiceChannel, sound)
+}
+
+
+let yt = (args, message) => {
+  let url = args[0]
+  if (!url) return
+
+  let voiceChannel = message.member.voiceChannel
+  if (!voiceChannel) return
+
+  voiceChannel.join()
+    .then(connection => {
+      if (connection.player.dispatcher && !connection.player.dispatcher.paused) {
+        connection.player.dispatcher.pause()
+      }
+      const stream = ytdl(url, {filter: 'audioonly'})
+      const dispatcher = connection.playStream(stream, VOLUME)
+      dispatcher.on('end', () => dispatcher.pause())
+      message.channel.sendMessage()
+    })
+    .catch(console.error)
 }
 
 let TTS = (args, message) => {
@@ -211,6 +233,7 @@ let addFile = (args, message) => {
   })
 }
 
+
 const commandsDispatcher = {
   play,
   stop,
@@ -218,6 +241,7 @@ const commandsDispatcher = {
   random,
   volume,
   addFile,
+  yt,
   TTS,
   TTSOn,
   TTSOff,
