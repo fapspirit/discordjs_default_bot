@@ -1,0 +1,48 @@
+{
+  /**
+   * Application configuration section
+   * http://pm2.keymetrics.io/docs/usage/application-declaration/
+   */
+  "apps" : [
+
+    // First application
+    {
+      "name"      : "bot",
+      "script"    : "app.js",
+      "env": {
+        "COMMON_VARIABLE": "true"
+      },
+      "env_production" : {
+        "NODE_ENV": "production"
+      }
+    }
+  ],
+
+  /**
+   * Deployment section
+   * http://pm2.keymetrics.io/docs/usage/deployment/
+   */
+  "deploy" : {
+    "production" : {
+      "user" : "YOUR USER",
+      "host" : "YOUR HOST",
+      "ref"  : "origin/master",
+      "repo" : "git@github.com:fapspirit/discordjs_default_bot.git",
+      "path" : "/home/app/discordjs_default_bot",
+      "post-setup": "ln -s ~/shared/discordjs_default_bot/config.json ~/discordjs_default_bot/source/config.json && ln -s ln -s ~/shared/discordjs_default_bot/sounds/ ~/discordjs_default_bot/source/",
+      "post-deploy" : "yarn && pm2 reload ecosystem.config.js --env production",
+      "env"  : {
+        "NODE_ENV": "production"
+      }
+    },
+    "dev" : {
+      "user" : "YOUR USER",
+      "host" : "YOUR HOST",
+      "ref"  : "origin/development",
+      "repo" : "git@github.com:fapspirit/discordjs_default_bot.git",
+      "path" : "/home/app/discordjs_default_bot",
+      "post-setup": "ln -s ~/shared/discordjs_default_bot/config.json ~/discordjs_default_bot/source/config.json && ln -s ln -s ~/shared/discordjs_default_bot/sounds/ ~/discordjs_default_bot/source/",
+      "post-deploy" : "yarn && pm2 reload ecosystem.config.js --env development"
+    }
+  }
+}
