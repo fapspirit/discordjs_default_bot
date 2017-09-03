@@ -37,11 +37,9 @@ let checkPermissions = (command, message) => {
 }
 
 let getUsername = (message) => {
-  if (message.channel.type === 'dm') {
-    return message.author.username
-  } else {
-    return message.member.user.username
-  }
+  return message.channel.type === 'dm'
+    ? message.author.username
+    : message.member.user.username
 }
 
 let getSounds = () => {
@@ -85,6 +83,8 @@ let playSound = (voiceChannel, sound) => {
 
     let fileName = `${SOUNDS_DIR}${sound}.mp3`
     let dispatcher = connection.playFile(fileName, VOLUME)
+    // Workaround with gorwing delays
+    dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
     // Pause song after playing
     dispatcher.on('end', () => dispatcher.pause())
   }).catch(console.error)
