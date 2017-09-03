@@ -9,10 +9,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^10.0.1",
-    "node-opus": "^0.2.4",
-    "opusscript": "0.0.1",
-    "request": "^2.79.0",
-    "ytdl-core": "^0.7.19"
+    "bufferutil": "^3.0.2",
+    "discord.js": "^11.1.0",
+    "erlpack": "hammerandchisel/erlpack",
+    "libsodium-wrappers": "^0.5.4",
+    "node-opus": "^0.2.6",
+    "opusscript": "^0.0.3",
+    "request": "^2.81.0",
+    "uws": "^8.14.1",
+    "ytdl-core": "^0.17.1"
   }
 }
