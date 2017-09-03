@@ -37,11 +37,10 @@ let checkPermissions = (command, message) => {
 }
 
 let getUsername = (message) => {
-  if (message.channel.type === 'dm') {
+  if (message.channel.type === 'dm')
     return message.author.username
-  } else {
+  else
     return message.member.user.username
-  }
 }
 
 let getSounds = () => {
