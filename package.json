@@ -1,9 +1,14 @@
 {
   "name": "discordjs-bot",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Default discrod bot powered by discord.js",
+  "main": "app.js",
   "scripts": {
+    "deploy-setup-dev": "pm2 deploy dev setup",
+    "deploy-dev": "pm2 deploy dev",
+    "deploy-setup-prod": "pm2 deploy production setup",
+    "deploy-prod": "pm2 deploy production",
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
