@@ -22,34 +22,34 @@ VOLUME = { volume: VOLUME / 100 }
 // Utils
 /////
 
-let getCommand = text => text.split(' ')[0].slice(PREFIX.length)
+const getCommand = text => text.split(' ')[0].slice(PREFIX.length)
 
-let getArgs = text => text.split(' ').slice(1)
+const getArgs = text => text.split(' ').slice(1)
 
-let getTime = () => `${new Date()}`
+const getTime = () => `${new Date()}`
 
-let printLog = (command, args, user) => console.log(`${getTime()}\t${user}\t${command}\t${args.join(', ')}`)
+const printLog = (command, args, user) => console.log(`${getTime()}\t${user}\t${command}\t${args.join(', ')}`)
 
-let checkPermissions = (command, message) => {
+const checkPermissions = (command, message) => {
   if (message.channel.type === 'dm' && ['list', 'delete', 'help'].includes(command))
     return false
   return true
 }
 
-let getUsername = (message) => {
+const getUsername = (message) => {
   if (message.channel.type === 'dm')
     return message.author.username
   else
     return message.member.user.username
 }
 
-let getSounds = () => {
+const getSounds = () => {
   return fs.readdirSync(SOUNDS_DIR)
     .filter(sound => path.extname(sound) === '.mp3')
     .map(sound => path.basename(sound, path.extname(sound)))
 }
 
-let parseText = (text) => {
+const parseText = (text) => {
   let data = {
     command: getCommand(text),
     args: getArgs(text)
@@ -66,7 +66,7 @@ let parseText = (text) => {
 // Main
 /////
 
-let commandDispatcher = (command, args, message) => {
+const commandDispatcher = (command, args, message) => {
   if (command in commandsDispatcher) {
     commandsDispatcher[command](args, message)
     args.unshift('executed')
@@ -75,8 +75,10 @@ let commandDispatcher = (command, args, message) => {
   printLog(command, args, getUsername(message))
 }
 
-let playSound = (voiceChannel, sound) => {
-  voiceChannel.join().then(connection => {
+const playSound = async (voiceChannel, sound) => {
+  try {
+    const connection = await voiceChannel.join()
+
     // Stop previus song if playing song exists and doesn't paused
     if (connection.player.dispatcher && !connection.player.dispatcher.paused) {
       connection.player.dispatcher.pause()
@@ -84,14 +86,15 @@ let playSound = (voiceChannel, sound) => {
 
     let fileName = `${SOUNDS_DIR}${sound}.mp3`
     let dispatcher = connection.playFile(fileName, VOLUME)
+
     // Workaround with gorwing delays
     dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
-    // Pause song after playing
-    dispatcher.on('end', () => dispatcher.pause())
-  }).catch(console.error)
+  } catch (e) {
+    console.error(e)
+  }
 }
 
-let play = (args, message) => {
+const play = async (args, message) => {
   let sound = args[0]
   if (!sound) return
 
@@ -105,37 +108,39 @@ let play = (args, message) => {
 }
 
 
-let yt = (args, message) => {
+const yt = async (args, message) => {
   let url = args[0]
   if (!url) return
 
   let voiceChannel = message.member.voiceChannel
   if (!voiceChannel) return
 
-  voiceChannel.join()
-    .then(connection => {
-      if (connection.player.dispatcher && !connection.player.dispatcher.paused) {
-        connection.player.dispatcher.pause()
-      }
-      const stream = ytdl(url, {filter: 'audioonly'})
-      const dispatcher = connection.playStream(stream, VOLUME)
-      dispatcher.on('end', () => dispatcher.pause())
-      message.channel.sendMessage()
-    })
-    .catch(console.error)
-}
+  try {
+    const connection = await voiceChannel.join()
+    if (connection.player.dispatcher && !connection.player.dispatcher.paused) {
+      connection.player.dispatcher.pause()
+    }
+    const stream = ytdl(url, {filter: 'audioonly'})
+    const dispatcher = connection.playStream(stream, VOLUME)
 
-let TTS = (args, message) => {
-  if (TTS_ON === true) {
-    message.channel.sendTTSMessage(args.join(' '))
+    dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
+    message.channel.sendMessage()
+  } catch (e) {
+    return console.error(e)
   }
 }
-let TTSOn = args => TTS_ON = true
-let TTSOff = args => TTS_ON = false
-let greetingOn = args => ENABLED_GREETING = true
-let greetingOff = args => ENABLED_GREETING = false
 
-let greeting = (args, message) => {
+const TTS = (args, message) => {
+  if (TTS_ON === true) {
+    message.channel.send(args.join(' '), { tts: true })
+  }
+}
+const TTSOn = args => TTS_ON = true
+const TTSOff = args => TTS_ON = false
+const greetingOn = args => ENABLED_GREETING = true
+const greetingOff = args => ENABLED_GREETING = false
+
+const greeting = (args, message) => {
   let sound = args[0]
   if (!sound) return message.channel.sendMessage('Не указано имя файла')
 
@@ -148,32 +153,61 @@ let greeting = (args, message) => {
   message.channel.sendMessage(`\`${sound}\` - это дерьмо поставлено на приветствие этим уважаемым человеком \`${message.author.username}\``)
 }
 
-let list = (args, message) => {
+const list = (args, message) => {
   let sounds = getSounds().join("\n")
   let text = "```Sound List. To play sound, type !play [sound name] \n\n" + sounds + "```"
   message.author.sendMessage(text)
 }
 
-let stop = (args, message) => {
+const pause = async (args, message) => {
   let voiceChannel = message.member.voiceChannel
   if (!voiceChannel) return
 
-  voiceChannel.join().then(connection => connection.player.dispatcher.pause())
+  try {
+    const connection = await voiceChannel.join()
+    if (connection && connection.dispatcher) {
+      connection.dispatcher.pause()
+    }
+  } catch (e) {
+    console.error(e)
+  }
 }
 
-let resume = (args, message) => {
+const stop = async (args, message) => {
   let voiceChannel = message.member.voiceChannel
   if (!voiceChannel) return
 
-  voiceChannel.join().then(connection => connection.player.dispatcher.resume())
+  try {
+    const connection = await voiceChannel.join()
+    if (connection && connection.dispatcher) {
+      connection.dispatcher.end()
+    }
+  } catch (e) {
+    console.error(e)
+  }
 }
 
-let volume = args => {
+const resume = async (args, message) => {
+  let voiceChannel = message.member.voiceChannel
+  if (!voiceChannel) return
+
+  try {
+    const connection = await voiceChannel.join()
+    if (connection && connection.dispatcher) {
+      connection.dispatcher.resume()
+    }
+
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const volume = args => {
   if (!args[0] || args[0] == 0) return
   VOLUME.volume = parseInt(args[0]) / 100
 }
 
-let help = (args, message) => {
+const help = (args, message) => {
   let text = `
     \`\`\`
     Avaliable commands:\n\n
@@ -182,7 +216,8 @@ let help = (args, message) => {
     !play [sound_name]       Play [sound_name]\n
     !random                  Play random song\n
     !list                    List avaliable sounds\n
-    !stop                    Pause playing current song\n
+    !stop                    Stop playing current song\n
+    !pause                   Pause playing current song\n
     !resume                  Resume playing previus song\n
     !addFile                 Add files (Only accepts .mp3)\n
     !yt [link]               Play an YouTube video from [link]\n
@@ -206,7 +241,7 @@ let help = (args, message) => {
   message.author.sendMessage(text)
 }
 
-let random = (args, message) => {
+const random = (args, message) => {
   let voiceChannel = message.member.voiceChannel
   if (!voiceChannel) return
   let sounds = getSounds()
@@ -214,7 +249,7 @@ let random = (args, message) => {
   playSound(voiceChannel, sounds[randomIndex])
 }
 
-let addFile = (args, message) => {
+const addFile = (args, message) => {
   message.attachments.every(attachment => {
     if (path.extname(attachment.filename) !== '.mp3') {
       console.log(`Attempting to add file with no valid extinshion: ${attachment.filename}`)
@@ -238,6 +273,7 @@ let addFile = (args, message) => {
 
 const commandsDispatcher = {
   play,
+  pause,
   stop,
   resume,
   random,
