@@ -124,7 +124,6 @@ const yt = async (args, message) => {
     const dispatcher = connection.playStream(stream, VOLUME)
 
     dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
-    message.channel.sendMessage()
   } catch (e) {
     return console.error(e)
   }

@@ -22,9 +22,9 @@
     "opusscript": "^0.0.4",
     "request": "^2.81.0",
     "uws": "^8.14.1",
-    "ytdl-core": "^0.18.1"
+    "ytdl-core": "^0.18.7"
   },
   "engines": {
-    "node" : ">=7.6"
+    "node": ">=7.6"
   }
 }
