@@ -50,7 +50,7 @@ const getSounds = () => {
 }
 
 const parseText = (text) => {
-  let data = {
+  const data = {
     command: getCommand(text),
     args: getArgs(text)
   }
@@ -84,22 +84,21 @@ const playSound = async (voiceChannel, sound) => {
       connection.player.dispatcher.pause()
     }
 
-    let fileName = `${SOUNDS_DIR}${sound}.mp3`
-    let dispatcher = connection.playFile(fileName, VOLUME)
+    const fileName = `${SOUNDS_DIR}${sound}.mp3`
+    const dispatcher = connection.playFile(fileName, VOLUME)
 
     // Workaround with gorwing delays
-    dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
+    // dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
   } catch (e) {
     console.error(e)
   }
 }
 
-const play = async (args, message) => {
-  let sound = args[0]
+const play = async ([ sound ], message) => {
   if (!sound) return
 
   // Check if sender in voice channel
-  let voiceChannel = message.member.voiceChannel
+  const { VoiceChannel } = message.member
   if (!voiceChannel) return
 
   // Check if sound exists on fs
@@ -108,11 +107,10 @@ const play = async (args, message) => {
 }
 
 
-const yt = async (args, message) => {
-  let url = args[0]
+const yt = async ([ url ], message) => {
   if (!url) return
 
-  let voiceChannel = message.member.voiceChannel
+  const { voiceChannel } = message.member
   if (!voiceChannel) return
 
   try {
@@ -120,10 +118,10 @@ const yt = async (args, message) => {
     if (connection.player.dispatcher && !connection.player.dispatcher.paused) {
       connection.player.dispatcher.pause()
     }
+
     const stream = ytdl(url, {filter: 'audioonly'})
     const dispatcher = connection.playStream(stream, VOLUME)
 
-    dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
   } catch (e) {
     return console.error(e)
   }
@@ -139,27 +137,26 @@ const TTSOff = args => TTS_ON = false
 const greetingOn = args => ENABLED_GREETING = true
 const greetingOff = args => ENABLED_GREETING = false
 
-const greeting = (args, message) => {
-  let sound = args[0]
-  if (!sound) return message.channel.sendMessage('Не указано имя файла')
+const greeting = ([ sound ], message) => {
+  if (!sound) return message.channel.send('Не указано имя файла')
 
   if (!fs.readdirSync(SOUNDS_DIR).includes(`${sound}.mp3`)) {
-    return message.channel.sendMessage('Нет такого файла')
+    return message.channel.send('Нет такого файла')
   }
 
   GREETING_SONG = sound
 
-  message.channel.sendMessage(`\`${sound}\` - это дерьмо поставлено на приветствие этим уважаемым человеком \`${message.author.username}\``)
+  message.channel.send(`\`${sound}\` - это дерьмо поставлено на приветствие этим уважаемым человеком \`${message.author.username}\``)
 }
 
 const list = (args, message) => {
-  let sounds = getSounds().join("\n")
-  let text = "```Sound List. To play sound, type !play [sound name] \n\n" + sounds + "```"
-  message.author.sendMessage(text)
+  const sounds = getSounds().join("\n")
+  const text = "```Sound List. To play sound, type !play [sound name] or !! [sound name] \n\n" + sounds + "```"
+  message.author.send(text)
 }
 
 const pause = async (args, message) => {
-  let voiceChannel = message.member.voiceChannel
+  const { VoiceChannel } = message.member
   if (!voiceChannel) return
 
   try {
@@ -173,7 +170,7 @@ const pause = async (args, message) => {
 }
 
 const stop = async (args, message) => {
-  let voiceChannel = message.member.voiceChannel
+  const { VoiceChannel } = message.member
   if (!voiceChannel) return
 
   try {
@@ -187,7 +184,7 @@ const stop = async (args, message) => {
 }
 
 const resume = async (args, message) => {
-  let voiceChannel = message.member.voiceChannel
+  const { voiceChannel } = message.member
   if (!voiceChannel) return
 
   try {
@@ -201,13 +198,13 @@ const resume = async (args, message) => {
   }
 }
 
-const volume = args => {
-  if (!args[0] || args[0] == 0) return
-  VOLUME.volume = parseInt(args[0]) / 100
+const volume = ([ value ]) => {
+  if (!value || value == 0) return
+  VOLUME.volume = parseInt(value) / 100
 }
 
 const help = (args, message) => {
-  let text = `
+  const text = `
     \`\`\`
     Avaliable commands:\n\n
 
@@ -237,14 +234,14 @@ const help = (args, message) => {
     \t3. You will see success message, if everything is OK\n
     \`\`\`
   `
-  message.author.sendMessage(text)
+  message.author.send(text)
 }
 
 const random = (args, message) => {
-  let voiceChannel = message.member.voiceChannel
+  const { VoiceChannel } = message.member
   if (!voiceChannel) return
-  let sounds = getSounds()
-  let randomIndex = Math.floor(Math.random() * (sounds.length - 1))
+  const sounds = getSounds()
+  const randomIndex = Math.floor(Math.random() * (sounds.length - 1))
   playSound(voiceChannel, sounds[randomIndex])
 }
 
@@ -301,7 +298,7 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
   if (newMember.user.bot) return
   if (newMember.voiceChannelID === oldMember.voiceChannelID) return
 
-  let voiceChannel = newMember.voiceChannel
+  const { voiceChannel } = newMember
   if (!voiceChannel) return
 
   playSound(voiceChannel, GREETING_SONG)
