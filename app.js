@@ -230,7 +230,7 @@ const help = (args, message) => {
     \n\n
     To add song to songlist, follow this steps:\n
     \t1. Drag'n'Drop songs in the channel with bot.\n
-    \t2. In the comment message write !addFile command.\n
+    \t2. In the comment message write !addFile [soundname] command (if soundname is not specified, name of the file will be used instead).\n
     \t3. You will see success message, if everything is OK\n
     \`\`\`
   `
@@ -245,22 +245,28 @@ const random = (args, message) => {
   playSound(voiceChannel, sounds[randomIndex])
 }
 
-const addFile = (args, message) => {
-  message.attachments.every(attachment => {
-    if (path.extname(attachment.filename) !== '.mp3') {
-      console.log(`Attempting to add file with no valid extinshion: ${attachment.filename}`)
-      return message.author.sendMessage(`${attachment.filename} have not valid extenshion!`)
+const addFile = ([ soundName ], message) => {
+  message.attachments.every(({ filename, url }) => {
+    if (path.extname(filename) !== '.mp3') {
+      console.log(`Attempting to add file with no valid extinshion: ${filename}`)
+      return message.author.send(`${filename} have not valid extension!`)
     }
-    if (getSounds().includes(path.basename(attachment.filename, path.extname(attachment.filename)))) {
-      console.log(`Attempting to add file with existing name: ${attachment.filename}`)
-      return message.author.sendMessage(`${attachment.filename} already exists!`)
+
+    const extName = path.extname(filename)
+    const actualFileName = soundName ? `${soundName}${extName}` : filename
+
+    if (getSounds().includes(path.basename(actualFileName, extName))) {
+      console.log(`Attempting to add file with existing name: ${actualFileName}`)
+      return message.author.send(`${actualFileName} already exists!`)
     }
-    let dest = `${SOUNDS_DIR}${attachment.filename}`
-    let file = fs.createWriteStream(dest)
-    request.head(attachment.url, (err, res, body) => {
-       request(attachment.url).pipe(file).on('close', () => {
-        console.log(`${attachment.filename} successfully added`)
-        message.author.sendMessage(`${attachment.filename} successfully downladed! You may now use it with \`!play\` or \`!!\``)
+
+    const dest = `${SOUNDS_DIR}${actualFileName}`
+    const file = fs.createWriteStream(dest)
+
+    request.head(url, (err, res, body) => {
+       request(url).pipe(file).on('close', () => {
+        console.log(`${actualFileName} successfully added`)
+        message.author.send(`${actualFileName} successfully downladed! You may now use it with \`!play\` or \`!!\``)
        })
     })
   })
