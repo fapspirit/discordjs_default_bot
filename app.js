@@ -88,7 +88,7 @@ const playSound = async (voiceChannel, sound) => {
     const dispatcher = connection.playFile(fileName, VOLUME)
 
     // Workaround with gorwing delays
-    // dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
+    dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
   } catch (e) {
     console.error(e)
   }
@@ -98,7 +98,7 @@ const play = async ([ sound ], message) => {
   if (!sound) return
 
   // Check if sender in voice channel
-  const { VoiceChannel } = message.member
+  const { voiceChannel } = message.member
   if (!voiceChannel) return
 
   // Check if sound exists on fs
@@ -156,7 +156,7 @@ const list = (args, message) => {
 }
 
 const pause = async (args, message) => {
-  const { VoiceChannel } = message.member
+  const { voiceChannel } = message.member
   if (!voiceChannel) return
 
   try {
@@ -170,7 +170,7 @@ const pause = async (args, message) => {
 }
 
 const stop = async (args, message) => {
-  const { VoiceChannel } = message.member
+  const { voiceChannel } = message.member
   if (!voiceChannel) return
 
   try {
@@ -238,7 +238,7 @@ const help = (args, message) => {
 }
 
 const random = (args, message) => {
-  const { VoiceChannel } = message.member
+  const { voiceChannel } = message.member
   if (!voiceChannel) return
   const sounds = getSounds()
   const randomIndex = Math.floor(Math.random() * (sounds.length - 1))
