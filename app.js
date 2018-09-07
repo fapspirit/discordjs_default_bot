@@ -66,9 +66,9 @@ const parseText = (text) => {
 // Main
 /////
 
-const commandDispatcher = (command, args, message) => {
+const commandDispatcher = async (command, args, message) => {
   if (command in commandsDispatcher) {
-    commandsDispatcher[command](args, message)
+    await commandsDispatcher[command](args, message)
     args.unshift('executed')
   }
 
@@ -88,7 +88,9 @@ const playSound = async (voiceChannel, sound) => {
     const dispatcher = connection.play(fileName, VOLUME)
 
     // Workaround with gorwing delays
-    dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
+    return new Promise((resolve, reject) => {
+      dispatcher.on('start', resolve)
+    })
   } catch (e) {
     console.error(e)
   }
@@ -103,7 +105,7 @@ const play = async ([ sound ], message) => {
 
   // Check if sound exists on fs
   if (!fs.readdirSync(SOUNDS_DIR).includes(`${sound}.mp3`)) return
-  playSound(voice.channel, sound)
+  return playSound(voice.channel, sound)
 }
 
 
@@ -122,22 +124,26 @@ const yt = async ([ url ], message) => {
     const stream = ytdl(url, {filter: 'audioonly'})
     const dispatcher = connection.play(stream, VOLUME)
 
+    return new Promise((resolve, reject) => {
+      dispatcher.on('start', resolve)
+    })
+
   } catch (e) {
     return console.error(e)
   }
 }
 
-const TTS = (args, message) => {
+const TTS = async (args, message) => {
   if (TTS_ON === true) {
-    message.channel.send(args.join(' '), { tts: true })
+    return message.channel.send(args.join(' '), { tts: true })
   }
 }
-const TTSOn = args => TTS_ON = true
-const TTSOff = args => TTS_ON = false
-const greetingOn = args => ENABLED_GREETING = true
-const greetingOff = args => ENABLED_GREETING = false
+const TTSOn = async args => TTS_ON = true
+const TTSOff = async args => TTS_ON = false
+const greetingOn = async args => ENABLED_GREETING = true
+const greetingOff = async args => ENABLED_GREETING = false
 
-const greeting = ([ sound ], message) => {
+const greeting = async ([ sound ], message) => {
   if (!sound) return message.channel.send('Не указано имя файла')
 
   if (!fs.readdirSync(SOUNDS_DIR).includes(`${sound}.mp3`)) {
@@ -146,13 +152,13 @@ const greeting = ([ sound ], message) => {
 
   GREETING_SONG = sound
 
-  message.channel.send(`\`${sound}\` - это дерьмо поставлено на приветствие этим уважаемым человеком \`${message.author.username}\``)
+  return message.channel.send(`\`${sound}\` - это дерьмо поставлено на приветствие этим уважаемым человеком \`${message.author.username}\``)
 }
 
-const list = (args, message) => {
+const list = async (args, message) => {
   const sounds = getSounds().join("\n")
   const text = "```Sound List. To play sound, type !play [sound name] or !! [sound name] \n\n" + sounds + "```"
-  message.author.send(text)
+  await message.author.send(text)
 }
 
 const pause = async (args, message) => {
@@ -198,7 +204,7 @@ const resume = async (args, message) => {
   }
 }
 
-const volume = ([ value ], message) => {
+const volume = async ([ value ], message) => {
   if (!value || value == 0) return
   value = value > 100 ? 100 : value
   VOLUME.volume = parseInt(value) / 100
@@ -208,7 +214,7 @@ const volume = ([ value ], message) => {
   voiceConnection.player.dispatcher.setVolume(VOLUME.volume)
 }
 
-const help = (args, message) => {
+const help = async (args, message) => {
   const text = `
     \`\`\`
     Avaliable commands:\n\n
@@ -239,20 +245,20 @@ const help = (args, message) => {
     \t3. You will see success message, if everything is OK\n
     \`\`\`
   `
-  message.author.send(text)
+  return message.author.send(text)
 }
 
-const random = (args, message) => {
+const random = async (args, message) => {
   const { voice } = message.member
   if (!voice || !voice.channel) return
 
   const sounds = getSounds()
   const randomIndex = Math.floor(Math.random() * (sounds.length - 1))
-  playSound(voice.cannel, sounds[randomIndex])
+  return playSound(voice.cannel, sounds[randomIndex])
 }
 
-const addFile = ([ soundName ], message) => {
-  message.attachments.every(({ name, url }) => {
+const addFile = async ([ soundName ], message) => {
+  const attachments = message.attachments.map(({ name, url }) => {
     if (path.extname(name) !== '.mp3') {
       console.log(`Attempting to add file with no valid extinshion: ${name}`)
       return message.author.send(`${name} have not valid extension!`)
@@ -269,13 +275,19 @@ const addFile = ([ soundName ], message) => {
     const dest = `${SOUNDS_DIR}${filename}`
     const file = fs.createWriteStream(dest)
 
-    request.head(url, (err, res, body) => {
-       request(url).pipe(file).on('close', () => {
-        console.log(`${filename} successfully added`)
-        message.author.send(`${filename} successfully downladed! You may now use it with \`!play\` or \`!!\``)
-       })
+    return new Promise((resolve, reject) => {
+      request.head(url, (err, res, body) => {
+        if (err) return reject(err)
+         return request(url).pipe(file).on('close', () => {
+          console.log(`${filename} successfully added`)
+          message.author.send(`${filename} successfully downladed! You may now use it with \`!play\` or \`!!\``)
+          resolve()
+         })
+      })
     })
   })
+
+  return Promise.all(attachments)
 }
 
 
@@ -305,7 +317,7 @@ const commandsDispatcher = {
 client.on('ready', () => console.log('Ready'))
 
 
-client.on('voiceStateUpdate', (oldState, newState) => {
+client.on('voiceStateUpdate', async (oldState, newState) => {
   if (!ENABLED_GREETING) return printLog('logged', ['not played'], newState.member.user.username)
   if (newState.member.user.bot) return
   if (newState.channelID === oldState.channelID) return
@@ -313,12 +325,12 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   const { voice } = newState.member
   if (!voice || !voice.channel) return
 
-  playSound(voice.channel, GREETING_SONG)
+  await playSound(voice.channel, GREETING_SONG)
   printLog('logged', ['played'], newState.member.user.username)
 })
 
 
-client.on('message', message => {
+client.on('message', async message => {
   // Prevent self-spaming (just in case)
   if (message.author.bot) return
 
@@ -331,9 +343,8 @@ client.on('message', message => {
   commandDispatcher(command, args, message)
 
   if (checkPermissions('delete', message)) {
-    message.delete(DELETE_DELAY).then(msg => {
-      console.log('Message Deleted')
-    })
+    await message.delete(DELETE_DELAY)
+    console.log('Message Deleted')
   }
 })
 
