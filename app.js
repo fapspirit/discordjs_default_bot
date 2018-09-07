@@ -85,7 +85,7 @@ const playSound = async (voiceChannel, sound) => {
     }
 
     const fileName = `${SOUNDS_DIR}${sound}.mp3`
-    const dispatcher = connection.playFile(fileName, VOLUME)
+    const dispatcher = connection.play(fileName, VOLUME)
 
     // Workaround with gorwing delays
     dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
@@ -98,29 +98,29 @@ const play = async ([ sound ], message) => {
   if (!sound) return
 
   // Check if sender in voice channel
-  const { voiceChannel } = message.member
-  if (!voiceChannel) return
+  const { voice } = message.member
+  if (!voice || !voice.channel) return
 
   // Check if sound exists on fs
   if (!fs.readdirSync(SOUNDS_DIR).includes(`${sound}.mp3`)) return
-  playSound(voiceChannel, sound)
+  playSound(voice.channel, sound)
 }
 
 
 const yt = async ([ url ], message) => {
   if (!url) return
 
-  const { voiceChannel } = message.member
-  if (!voiceChannel) return
+  const { voice } = message.member
+  if (!voice || !voice.channel) return
 
   try {
-    const connection = await voiceChannel.join()
+    const connection = await voice.channel.join()
     if (connection.player.dispatcher && !connection.player.dispatcher.paused) {
       connection.player.dispatcher.pause()
     }
 
     const stream = ytdl(url, {filter: 'audioonly'})
-    const dispatcher = connection.playStream(stream, VOLUME)
+    const dispatcher = connection.play(stream, VOLUME)
 
   } catch (e) {
     return console.error(e)
@@ -156,11 +156,11 @@ const list = (args, message) => {
 }
 
 const pause = async (args, message) => {
-  const { voiceChannel } = message.member
-  if (!voiceChannel) return
+  const { voice } = message.member
+  if (!voice || !voice.channel) return
 
   try {
-    const connection = await voiceChannel.join()
+    const connection = await voice.channel.join()
     if (connection && connection.dispatcher) {
       connection.dispatcher.pause()
     }
@@ -170,11 +170,11 @@ const pause = async (args, message) => {
 }
 
 const stop = async (args, message) => {
-  const { voiceChannel } = message.member
-  if (!voiceChannel) return
+  const { voice } = message.member
+  if (!voice || !voice.channel) return
 
   try {
-    const connection = await voiceChannel.join()
+    const connection = await voice.channel.join()
     if (connection && connection.dispatcher) {
       connection.dispatcher.end()
     }
@@ -184,11 +184,11 @@ const stop = async (args, message) => {
 }
 
 const resume = async (args, message) => {
-  const { voiceChannel } = message.member
-  if (!voiceChannel) return
+  const { voice } = message.member
+  if (!voice || !voice.channel) return
 
   try {
-    const connection = await voiceChannel.join()
+    const connection = await voice.channel.join()
     if (connection && connection.dispatcher) {
       connection.dispatcher.resume()
     }
@@ -238,11 +238,12 @@ const help = (args, message) => {
 }
 
 const random = (args, message) => {
-  const { voiceChannel } = message.member
-  if (!voiceChannel) return
+  const { voice } = message.member
+  if (!voice || !voice.channel) return
+
   const sounds = getSounds()
   const randomIndex = Math.floor(Math.random() * (sounds.length - 1))
-  playSound(voiceChannel, sounds[randomIndex])
+  playSound(voice.cannel, sounds[randomIndex])
 }
 
 const addFile = ([ soundName ], message) => {
@@ -299,16 +300,16 @@ const commandsDispatcher = {
 client.on('ready', () => console.log('Ready'))
 
 
-client.on('voiceStateUpdate', (oldMember, newMember) => {
-  if (!ENABLED_GREETING) return printLog('logged', ['not played'], newMember.user.username)
-  if (newMember.user.bot) return
-  if (newMember.voiceChannelID === oldMember.voiceChannelID) return
+client.on('voiceStateUpdate', (oldState, newState) => {
+  if (!ENABLED_GREETING) return printLog('logged', ['not played'], newState.member.user.username)
+  if (newState.member.user.bot) return
+  if (newState.channelID === oldState.channelID) return
 
-  const { voiceChannel } = newMember
-  if (!voiceChannel) return
+  const { voice } = newState.member
+  if (!voice || !voice.channel) return
 
-  playSound(voiceChannel, GREETING_SONG)
-  printLog('logged', ['played'], newMember.user.username)
+  playSound(voice.channel, GREETING_SONG)
+  printLog('logged', ['played'], newState.member.user.username)
 })
 
 
