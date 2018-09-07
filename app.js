@@ -198,9 +198,14 @@ const resume = async (args, message) => {
   }
 }
 
-const volume = ([ value ]) => {
+const volume = ([ value ], message) => {
   if (!value || value == 0) return
+  value = value > 100 ? 100 : value
   VOLUME.volume = parseInt(value) / 100
+
+  const voiceConnection = client.voiceConnections.find(val => val.channel.guild.id === message.guild.id)
+  if (!voiceConnection) return
+  voiceConnection.player.dispatcher.setVolume(VOLUME.volume)
 }
 
 const help = (args, message) => {
