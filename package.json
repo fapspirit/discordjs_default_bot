@@ -2,7 +2,7 @@
   "name": "discordjs-bot",
   "version": "0.1.1",
   "description": "Default discrod bot powered by discord.js",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
     "deploy-setup-dev": "pm2 deploy dev setup",
     "deploy-dev": "pm2 deploy dev",
@@ -11,8 +11,8 @@
     "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Anton Fedorov (https://github.com/fapspirit)",
+  "license": "MIT",
   "dependencies": {
     "bufferutil": "^4.0.0",
     "discord.js": "discordjs/discord.js",
@@ -25,6 +25,6 @@
     "ytdl-core": "^0.25.2"
   },
   "engines": {
-    "node": ">=7.6"
+    "node": ">=10"
   }
 }
