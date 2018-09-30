@@ -252,27 +252,27 @@ const random = (args, message) => {
 }
 
 const addFile = ([ soundName ], message) => {
-  message.attachments.every(({ filename, url }) => {
-    if (path.extname(filename) !== '.mp3') {
-      console.log(`Attempting to add file with no valid extinshion: ${filename}`)
-      return message.author.send(`${filename} have not valid extension!`)
+  message.attachments.every(({ name, url }) => {
+    if (path.extname(name) !== '.mp3') {
+      console.log(`Attempting to add file with no valid extinshion: ${name}`)
+      return message.author.send(`${name} have not valid extension!`)
     }
 
-    const extName = path.extname(filename)
-    const actualFileName = soundName ? `${soundName}${extName}` : filename
+    const extName = path.extname(name)
+    const filename = soundName ? `${soundName}${extName}` : name
 
-    if (getSounds().includes(path.basename(actualFileName, extName))) {
-      console.log(`Attempting to add file with existing name: ${actualFileName}`)
-      return message.author.send(`${actualFileName} already exists!`)
+    if (getSounds().includes(path.basename(filename, extName))) {
+      console.log(`Attempting to add file with existing name: ${filename}`)
+      return message.author.send(`${filename} already exists!`)
     }
 
-    const dest = `${SOUNDS_DIR}${actualFileName}`
+    const dest = `${SOUNDS_DIR}${filename}`
     const file = fs.createWriteStream(dest)
 
     request.head(url, (err, res, body) => {
        request(url).pipe(file).on('close', () => {
-        console.log(`${actualFileName} successfully added`)
-        message.author.send(`${actualFileName} successfully downladed! You may now use it with \`!play\` or \`!!\``)
+        console.log(`${filename} successfully added`)
+        message.author.send(`${filename} successfully downladed! You may now use it with \`!play\` or \`!!\``)
        })
     })
   })
