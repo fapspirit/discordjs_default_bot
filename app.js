@@ -248,7 +248,8 @@ const random = (args, message) => {
 
   const sounds = getSounds()
   const randomIndex = Math.floor(Math.random() * (sounds.length - 1))
-  playSound(voice.cannel, sounds[randomIndex])
+
+  return playSound(voice.channel, sounds[randomIndex])
 }
 
 const addFile = ([ soundName ], message) => {
