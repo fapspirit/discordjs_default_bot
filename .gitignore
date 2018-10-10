@@ -1,6 +1,8 @@
+.DS_Store
 node_modules
 sounds
 gitflow
 config.json
 nodemon.json
 ecosystem.json
+yarn-error.log
