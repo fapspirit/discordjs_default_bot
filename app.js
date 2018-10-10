@@ -254,7 +254,8 @@ const random = async (args, message) => {
 
   const sounds = getSounds()
   const randomIndex = Math.floor(Math.random() * (sounds.length - 1))
-  return playSound(voice.cannel, sounds[randomIndex])
+
+  return playSound(voice.channel, sounds[randomIndex])
 }
 
 const addFile = async ([ soundName ], message) => {
