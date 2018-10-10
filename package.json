@@ -1,6 +1,6 @@
 {
   "name": "discordjs-bot",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "Default discrod bot powered by discord.js",
   "main": "app.js",
   "scripts": {
