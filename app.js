@@ -13,7 +13,6 @@ const SOUNDS_DIR = config.soundDir || './sounds/'
 
 let GREETING_SONG = config.greeting_song || 'allahu'
 let ENABLED_GREETING = config.enabled_greeting || false
-let TTS_ON = config.is_tts_avaliable || false
 let VOLUME = config.defaultVolume || 20
 VOLUME = { volume: VOLUME / 100 }
 
@@ -127,13 +126,6 @@ const yt = async ([ url ], message) => {
   }
 }
 
-const TTS = (args, message) => {
-  if (TTS_ON === true) {
-    message.channel.send(args.join(' '), { tts: true })
-  }
-}
-const TTSOn = args => TTS_ON = true
-const TTSOff = args => TTS_ON = false
 const greetingOn = args => ENABLED_GREETING = true
 const greetingOff = args => ENABLED_GREETING = false
 
@@ -223,9 +215,6 @@ const help = (args, message) => {
     !addFile                 Add files (Only accepts .mp3)\n
     !yt [link]               Play an YouTube video from [link]\n
     !volume [1..100]         Set volume form 1 to 100 (Default 20)\n
-    !TTS [text]              Talks passed text (Switched OFF by default)\n
-    !TTSOn                   Switch TTS on\n
-    !TTSOff                  Switch TTS off\n
     !greetingOn              Switch on greeting on connection (Switched ON by default)\n
     !greetingOff             Switch off greeting on connection\n
     !greeting [sound_name]   Set [sound_name] as greeting on someone connect\n
@@ -289,9 +278,6 @@ const commandsDispatcher = {
   volume,
   addFile,
   yt,
-  TTS,
-  TTSOn,
-  TTSOff,
   greetingOn,
   greetingOff,
   greeting,
