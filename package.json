@@ -1,6 +1,6 @@
 {
   "name": "discordjs-bot",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Default discrod bot powered by discord.js",
   "main": "app.js",
   "scripts": {
@@ -23,6 +23,6 @@
     "ytdl-core": "^2.0.1"
   },
   "engines": {
-    "node": ">=7.6"
+    "node": ">=12.0"
   }
 }
