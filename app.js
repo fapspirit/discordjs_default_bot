@@ -87,7 +87,7 @@ const playSound = async (voiceChannel, sound) => {
     const dispatcher = connection.play(fileName, VOLUME)
 
     // Workaround with gorwing delays
-    dispatcher.on('start', () => connection.player.streamingData.pausedTime = 0)
+    dispatcher.on('start', () => console.log(`playing ${sound}`))
   } catch (e) {
     console.error(e)
   }
@@ -195,8 +195,12 @@ const volume = ([ value ], message) => {
   value = value > 100 ? 100 : value
   VOLUME.volume = parseInt(value) / 100
 
-  const voiceConnection = client.voiceConnections.find(val => val.channel.guild.id === message.guild.id)
-  if (!voiceConnection) return
+  const connections = [...client.voice.connections.values()];
+
+  const voiceConnection = connections.find(val => val.channel.guild.id === message.guild.id)
+  
+  if (!voiceConnection || !voiceConnection.player || !voiceConnection.player.dispatcher) return
+
   voiceConnection.player.dispatcher.setVolume(VOLUME.volume)
 }
 
