@@ -332,9 +332,9 @@ client.on('message', message => {
   commandDispatcher(command, args, message)
 
   if (checkPermissions('delete', message)) {
-    message.delete(DELETE_DELAY).then(msg => {
+    message.delete({ timeout: DELETE_DELAY }).then(msg => {
       console.log('Message Deleted')
-    })
+    }).catch((err) => console.error('message delete error', err))
   }
 })
 
