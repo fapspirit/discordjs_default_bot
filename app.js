@@ -303,7 +303,7 @@ const commandsDispatcher = {
 // Events
 /////
 
-client.on('ready', () => console.log('Ready'))
+client.on('ready', () => console.log('Ready', client.user.id, client.user.username))
 
 
 client.on('voiceStateUpdate', (oldState, newState) => {
