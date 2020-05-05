@@ -71,11 +71,11 @@ const commandDispatcher = async (commandName, args, message, client) => {
 
     try {
       await command(args, message, client)
-    args.unshift('executed')
+      args.unshift('executed')
     } catch (error) {
       console.error(error)
       args.unshift('exec failed')
-  }
+    }
   }
 
   printLog(commandName, args, getUsername(message))
@@ -98,6 +98,14 @@ const playSound = async (voiceChannel, sound) => {
   } catch (e) {
     console.error(e)
   }
+}
+
+const _playonc = async ([ sound, channelID ], _message, client) => {
+  const channel = await client.channels.fetch(channelID)
+
+  if (channel.type !== 'voice') return
+
+  await playSound(channel, sound)
 }
 
 const play = async ([ sound ], message) => {
@@ -281,6 +289,7 @@ const addFile = ([ soundName ], message) => {
 
 
 const commandsDispatcher = {
+  _playonc,
   play,
   pause,
   stop,
