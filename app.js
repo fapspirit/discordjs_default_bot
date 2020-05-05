@@ -304,6 +304,8 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   const { voice } = newState.member
   if (!voice || !voice.channel) return
 
+  if (voice.channel.id === voice.channel.guild.afkChannelID) return
+
   playSound(voice.channel, GREETING_SONG)
   printLog('logged', ['played'], newState.member.user.username)
 })
