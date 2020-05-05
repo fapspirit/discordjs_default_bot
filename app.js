@@ -310,9 +310,6 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
 
 client.on('message', message => {
-  // Prevent self-spaming (just in case)
-  if (message.author.bot) return
-
   // Ignore messages that doesn't related to bot
   if (!message.content.startsWith(PREFIX)) return
 
