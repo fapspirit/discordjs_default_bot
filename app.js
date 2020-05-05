@@ -65,13 +65,20 @@ const parseText = (text) => {
 // Main
 /////
 
-const commandDispatcher = (command, args, message) => {
-  if (command in commandsDispatcher) {
-    commandsDispatcher[command](args, message)
+const commandDispatcher = async (commandName, args, message, client) => {
+  if (commandName in commandsDispatcher) {
+    const command = commandsDispatcher[commandName]
+
+    try {
+      await command(args, message, client)
     args.unshift('executed')
+    } catch (error) {
+      console.error(error)
+      args.unshift('exec failed')
+  }
   }
 
-  printLog(command, args, getUsername(message))
+  printLog(commandName, args, getUsername(message))
 }
 
 const playSound = async (voiceChannel, sound) => {
@@ -190,7 +197,7 @@ const resume = async (args, message) => {
   }
 }
 
-const volume = ([ value ], message) => {
+const volume = ([ value ], message, client) => {
   if (!value || value == 0) return
   value = value > 100 ? 100 : value
   VOLUME.volume = parseInt(value) / 100
@@ -318,7 +325,7 @@ client.on('message', message => {
   // Get command and args
   let { command, args } = parseText(message.content)
 
-  commandDispatcher(command, args, message)
+  commandDispatcher(command, args, message, client)
 
   if (checkPermissions('delete', message)) {
     message.delete({ timeout: DELETE_DELAY }).then(msg => {
