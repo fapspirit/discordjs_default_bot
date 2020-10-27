@@ -23,7 +23,7 @@
     "newrelic": "^6.7.1",
     "request": "^2.81.0",
     "utf-8-validate": "^5.0.2",
-    "ytdl-core": "^2.0.1"
+    "ytdl-core": "^4.0.0"
   },
   "engines": {
     "node": ">=12.0"
