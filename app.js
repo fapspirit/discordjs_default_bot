@@ -16,6 +16,8 @@ let ENABLED_GREETING = config.enabled_greeting || false
 let VOLUME = config.defaultVolume || 20
 VOLUME = { volume: VOLUME / 100 }
 
+const GREETNINGS_CONFIG_FILENAME = 'greetingsConfig.json';
+
 
 /////
 // Utils
@@ -61,6 +63,16 @@ const parseText = (text) => {
   return data
 }
 
+const parseConfig = (filename) => {
+  const content = fs.readFileSync(path.join(__dirname, filename), 'utf-8');
+
+  return JSON.parse(content);
+}
+
+const writeConfig = (filename, content) => {
+  fs.writeFileSync(path.join(__dirname, filename), JSON.stringify(content, null, 2), 'utf-8');
+}
+
 /////
 // Main
 /////
@@ -81,7 +93,7 @@ const commandDispatcher = async (commandName, args, message, client) => {
   printLog(commandName, args, getUsername(message))
 }
 
-const playSound = async (voiceChannel, sound) => {
+const playSound = async (voiceChannel, sound, volume = VOLUME.volume) => {
   try {
     const connection = await voiceChannel.join()
 
@@ -91,7 +103,7 @@ const playSound = async (voiceChannel, sound) => {
     }
 
     const fileName = `${SOUNDS_DIR}${sound}.mp3`
-    const dispatcher = connection.play(fileName, VOLUME)
+    const dispatcher = connection.play(fileName, { volume })
 
     // Workaround with gorwing delays
     dispatcher.on('start', () => console.log(`playing ${sound}`))
@@ -154,6 +166,28 @@ const greeting = ([ sound ], message) => {
   GREETING_SONG = sound
 
   message.channel.send(`\`${sound}\` - это дерьмо поставлено на приветствие этим уважаемым человеком \`${message.author.username}\``)
+}
+
+const greetingMe = ([sound, initialVolume = '60'], message) => {
+  if (!sound) return message.channel.send('Не указано название звука')
+
+  if (!fs.readdirSync(SOUNDS_DIR).includes(`${sound}.mp3`)) {
+    return message.channel.send('Нет такого звука')
+  }
+
+  const volume = parseInt(initialVolume, 10) / 100;
+
+  const greetingsConfig = parseConfig(GREETNINGS_CONFIG_FILENAME);
+
+  greetingsConfig[message.author.id] = {
+    sound,
+    volume,
+    username: message.author.username,
+  };
+
+  writeConfig(GREETNINGS_CONFIG_FILENAME, greetingsConfig);
+
+  message.author.send(`\`${sound}\` - теперь это будет играть с громкостью ${initialVolume}, когда ты заходишь в канал`)
 }
 
 const list = (args, message) => {
@@ -224,19 +258,20 @@ const help = (args, message) => {
     \`\`\`
     Avaliable commands:\n\n
 
-    !help                    Show this message\n
-    !play [sound_name]       Play [sound_name]\n
-    !random                  Play random song\n
-    !list                    List avaliable sounds\n
-    !stop                    Stop playing current song\n
-    !pause                   Pause playing current song\n
-    !resume                  Resume playing previus song\n
-    !addFile                 Add files (Only accepts .mp3)\n
-    !yt [link]               Play an YouTube video from [link]\n
-    !volume [1..100]         Set volume form 1 to 100 (Default 20)\n
-    !greetingOn              Switch on greeting on connection (Switched ON by default)\n
-    !greetingOff             Switch off greeting on connection\n
-    !greeting [sound_name]   Set [sound_name] as greeting on someone connect\n
+    !help                               Show this message\n
+    !play [sound_name]                  Play [sound_name]\n
+    !random                             Play random song\n
+    !list                               List avaliable sounds\n
+    !stop                               Stop playing current song\n
+    !pause                              Pause playing current song\n
+    !resume                             Resume playing previus song\n
+    !addFile                            Add files (Only accepts .mp3)\n
+    !yt [link]                          Play an YouTube video from [link]\n
+    !volume [1..100]                    Set volume form 1 to 100 (Default 20)\n
+    !greetingOn                         Switch on greeting on connection (Switched ON by default)\n
+    !greetingOff                        Switch off greeting on connection\n
+    !greeting [sound_name]              Set [sound_name] as greeting on someone connect\n
+    !greetingMe [sound_name] [1..100]   Set [sound_name] as greeting on *your* connect with specified volume. If volume is not set then 60 used\n
     \n
     Aliases:\n\n
     !! [song_name]           Play [sound_name]. Space is required.\n
@@ -302,7 +337,8 @@ const commandsDispatcher = {
   greetingOff,
   greeting,
   help,
-  list
+  list,
+  greetingMe,
 }
 
 /////
@@ -322,8 +358,12 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
   if (voice.channel.id === voice.channel.guild.afkChannelID) return
 
-  playSound(voice.channel, GREETING_SONG)
-  printLog('logged', ['played'], newState.member.user.username)
+  const greetingConfig = parseConfig(GREETNINGS_CONFIG_FILENAME);
+
+  const { sound = GREETING_SONG, volume } = greetingConfig[newState.member.user.id] || {};
+
+  playSound(voice.channel, sound, volume);
+  printLog('logged', ['played', sound], newState.member.user.username)
 })
 
 

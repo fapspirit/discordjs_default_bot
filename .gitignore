@@ -6,3 +6,4 @@ config.json
 nodemon.json
 ecosystem.json
 yarn-error.log
+greetingsConfig.json
